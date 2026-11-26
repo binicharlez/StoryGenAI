@@ -24,6 +24,10 @@ The story builder is deterministic and template-based. MP4 rendering uses Pillow
 
 StoryGenAI includes an optional adapter for [OpenTalker/SadTalker](https://github.com/OpenTalker/SadTalker). Given a presenter photo and narration WAV, it runs SadTalker to animate facial movement and lip-sync, then adds the narration track to the MP4. It supports full-image preprocessing and a pose-style setting. The adapter does not pass SadTalker's `--still` flag, allowing audio-driven head motion. An optional short MP4 pose-reference video of you sitting upright and gesturing can guide the generated pose through SadTalker’s reference-pose option. This is a pose-transfer aid, not a guarantee of perfectly natural hand gestures.
 
+### Important: Streamlit Community Cloud
+
+The default Community Cloud runtime does not include SadTalker or its checkpoints. The app cannot create a talking-avatar video there until the model is installed in a suitable runtime. Installing the adapter package alone is not enough. For local use, install SadTalker and its checkpoints separately, then set `SADTALKER_DIR` and, if using a separate environment, `SADTALKER_PYTHON`. SadTalker's official macOS instructions were tested on Apple Silicon; Intel macOS may require dependency adjustments.
+
 ### Install for local/GPU use
 
 1. Clone and install SadTalker following its official installation instructions, and download its required checkpoints into that checkout's checkpoints folder.
@@ -31,6 +35,8 @@ StoryGenAI includes an optional adapter for [OpenTalker/SadTalker](https://githu
 3. Set the path to the SadTalker checkout before starting Streamlit:
 
    export SADTALKER_DIR="/path/to/SadTalker"
+   # Optional: use the Python executable from SadTalker's dedicated environment
+   export SADTALKER_PYTHON="/path/to/sadtalker-env/bin/python"
    streamlit run app.py
 
    Optionally set SADTALKER_CHECKPOINT_DIR if your checkpoints are stored elsewhere. Set SADTALKER_FORCE_CPU=1 to force CPU inference.
