@@ -217,8 +217,7 @@ if plan:
     if generated_audio:
         st.audio(generated_audio, format="audio/wav")
         st.download_button("Download generated narration (WAV)", data=generated_audio, file_name="story_narration.wav", mime="audio/wav")
-    if narration_file or generated_audio:
-          if st.button("Render vertical MP4"):
+    if st.button("Render vertical MP4"):
         temporary_video = None
         temporary_audio = None
         temporary_final = None
