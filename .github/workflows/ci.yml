@@ -26,6 +26,9 @@ jobs:
           cache: pip
           cache-dependency-path: requirements.txt
 
+      - name: Install system TTS engine
+        run: sudo apt-get update && sudo apt-get install -y espeak-ng
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
