@@ -106,8 +106,6 @@ def _extract_prompt_details(idea: str) -> tuple[str, str, str]:
     )
     # If the prompt is a short place/idea phrase (e.g. "a big village"), preserve it verbatim.
     location = location_match.group(1).strip() if location_match else cleaned
-    if location.lower().startswith(("a ", "an ", "the ")):
-        location = location[2:] if location.lower().startswith("a ") else location[3:]
     return character, discovery, location
 
 
