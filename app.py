@@ -173,8 +173,8 @@ if plan:
     )
     animation_mode = st.radio(
         "Video animation",
-        ["Photo + captions", "Talking avatar (SadTalker)"],
-        help="Talking avatar uses an audio-driven face animation model installed on the machine running this app.",
+        ["Talking avatar (SadTalker)", "Photo + captions"],
+        help="Talking-avatar mode is selected by default. It requires SadTalker and its checkpoints installed in this runtime; it will not silently switch to a still photo.",
     )
     pose_style = st.slider("Avatar head-motion style", min_value=0, max_value=45, value=0, step=1)
     sadtalker_ready, sadtalker_message = sadtalker_status()
