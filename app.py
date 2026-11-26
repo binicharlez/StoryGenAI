@@ -10,6 +10,7 @@ from storygenai.file_utils import ensure_project_dirs
 from storygenai.story_builder import build_story_plan
 from storygenai.captions import generate_srt
 from storygenai.audio_mux import mux_audio
+from storygenai.tts import generate_narration
 from storygenai.video_renderer import render_story_video
 
 settings = get_settings()
@@ -38,6 +39,7 @@ if submitted:
     try:
         st.session_state["story_plan"] = build_story_plan(prompt, style, duration)
         st.session_state.pop("story_video_bytes", None)
+        st.session_state.pop("generated_narration_bytes", None)
     except ValueError as error:
         st.warning(str(error))
         st.session_state.pop("story_plan", None)
@@ -74,9 +76,28 @@ if plan:
         mime="application/x-subrip",
     )
 
-    narration_file = st.file_uploader("Optional narration audio", type=["wav", "mp3", "m4a", "aac", "ogg", "flac"])
-    if narration_file:
-        st.caption("Your narration will be padded or trimmed to match the video duration.")
+    narration_file = st.file_uploader("Optional recorded narration", type=["wav", "mp3", "m4a", "aac", "ogg", "flac"])
+    if st.button("Generate narration audio (offline)"):
+        temporary_tts = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".wav", dir=settings.outputs_dir, delete=False) as temp_tts:
+                temporary_tts = Path(temp_tts.name)
+            with st.spinner("Generating narration with the offline voice engine..."):
+                generate_narration(plan, temporary_tts)
+                st.session_state["generated_narration_bytes"] = temporary_tts.read_bytes()
+            st.success("Narration WAV generated. It will be added to your MP4.")
+        except Exception as error:
+            st.error(f"Could not generate narration: {error}")
+        finally:
+            if temporary_tts is not None:
+                temporary_tts.unlink(missing_ok=True)
+
+    generated_audio = st.session_state.get("generated_narration_bytes")
+    if generated_audio:
+        st.audio(generated_audio, format="audio/wav")
+        st.download_button("Download generated narration (WAV)", data=generated_audio, file_name="story_narration.wav", mime="audio/wav")
+    if narration_file or generated_audio:
+        st.caption("Recorded narration takes priority if both a recording and generated narration are available. Audio is padded or trimmed to the video duration.")
 
     if st.button("Render vertical MP4"):
         temporary_video = None
@@ -88,11 +109,16 @@ if plan:
             with st.spinner("Rendering your vertical video..."):
                 render_story_video(plan, temporary_video)
                 final_path = temporary_video
-                if narration_file is not None:
-                    audio_suffix = Path(narration_file.name).suffix.lower() or ".wav"
+                if narration_file is not None or generated_audio is not None:
+                    if narration_file is not None:
+                        audio_suffix = Path(narration_file.name).suffix.lower() or ".wav"
+                        audio_bytes = narration_file.getbuffer()
+                    else:
+                        audio_suffix = ".wav"
+                        audio_bytes = generated_audio
                     with tempfile.NamedTemporaryFile(suffix=audio_suffix, dir=settings.outputs_dir, delete=False) as temp_audio:
                         temporary_audio = Path(temp_audio.name)
-                        temp_audio.write(narration_file.getbuffer())
+                        temp_audio.write(audio_bytes)
                     with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_output:
                         temporary_final = Path(temp_output.name)
                     mux_audio(temporary_video, temporary_audio, temporary_final, plan["duration_seconds"])
