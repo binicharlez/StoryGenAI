@@ -8,6 +8,7 @@ import streamlit as st
 from storygenai.config import get_settings
 from storygenai.file_utils import ensure_project_dirs
 from storygenai.story_builder import build_story_plan
+from storygenai.captions import generate_srt
 from storygenai.video_renderer import render_story_video
 
 settings = get_settings()
@@ -64,6 +65,12 @@ if plan:
         data=json.dumps(plan, indent=2, ensure_ascii=False),
         file_name="story_plan.json",
         mime="application/json",
+    )
+    st.download_button(
+        "Download subtitles (SRT)",
+        data=generate_srt(plan),
+        file_name="story_captions.srt",
+        mime="application/x-subrip",
     )
 
     if st.button("Render vertical MP4"):
