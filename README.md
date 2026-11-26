@@ -11,11 +11,11 @@ StoryGenAI is an early-stage Streamlit project for turning text ideas into creat
 - **Silent vertical MP4 export** with hook, scene, and call-to-action cards (9:16, H.264)
 - SRT subtitle export aligned to the story timeline
 - Optional user-recorded narration upload (WAV, MP3, M4A, AAC, OGG, FLAC) muxed into the MP4
-- Offline text-to-speech narration using the free espeak-ng engine, with selectable English voice variants and speech speed
+- Offline text-to-speech narration using the free espeak-ng engine, with selectable English voice variants including Indian English, and speech speed
 - Configuration and safe file-management utilities
 - Automated tests through GitHub Actions
 
-The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The video contains text scene cards. You can upload your own narration recording and the app will pad or trim it to the planned video duration. The app can generate basic offline narration using espeak-ng, select from several English voice variants, adjust speech speed, or accept a recorded voice track. Voice cloning, generated footage, and face animation are not connected yet.
+The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The video contains text scene cards. You can upload your own narration recording and the app will pad or trim it to the planned video duration. The app can generate basic offline narration using espeak-ng, select from several English voice variants including Indian English, adjust speech speed, or accept a recorded voice track. Voice cloning, generated footage, and face animation are not connected yet.
 
 ## Run in GitHub Codespaces
 
