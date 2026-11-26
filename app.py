@@ -17,14 +17,14 @@ settings = get_settings()
 ensure_project_dirs(settings)
 
 st.set_page_config(page_title="Story Generator", page_icon="📖", layout="centered")
-st.title("📖 Story Generator: Bring Your Imagination to Life!")
+st.title("📖 StoryGenAI: Bring Your Imagination to Life!")
 st.subheader("Create captivating short stories in seconds! ✍️✨")
 st.write(
     "Welcome to Story Generator, your storytelling assistant!\n\n"
     "Describe an idea, character, or setting and turn it into a short story. "
     "You can then edit the scenes, create narration, and export a vertical video."
 )
-st.caption("Stories are generated locally from story templates—no paid API is required.")
+st.caption("Stories are generated locally from your prompt—no paid API is required.")
 
 with st.form("story_form"):
     prompt = st.text_area("Describe a character and a setting:", placeholder="e.g., a curious child in a big village")
