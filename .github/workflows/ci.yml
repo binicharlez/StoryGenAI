@@ -27,7 +27,7 @@ jobs:
           cache-dependency-path: requirements.txt
 
       - name: Install system TTS engine
-        run: sudo apt-get update && sudo apt-get install -y espeak-ng
+        run: sudo apt-get update && sudo apt-get install -y espeak-ng fonts-noto-core
 
       - name: Install dependencies
         run: |
