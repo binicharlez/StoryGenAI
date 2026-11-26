@@ -51,7 +51,7 @@ def test_generate_short_story_returns_complete_story_for_idea():
     story = generate_short_story("a big village", "Cinematic")
     assert "a big village" in story
     assert len(story.split()) > 40
-    assert "\\n\\n" in story
+    assert "\n\n" in story
 
 
 def test_generate_short_story_rejects_empty_idea():
