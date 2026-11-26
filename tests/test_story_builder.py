@@ -59,3 +59,17 @@ def test_generate_short_story_rejects_empty_idea():
 
     with pytest.raises(ValueError, match="story idea"):
         generate_short_story("   ")
+
+def test_generated_story_uses_prompt_character_discovery_and_setting():
+    from storygenai.story_builder import generate_short_story
+
+    story = generate_short_story(
+        "A little girl named Anu discovers a magical garden in Kerala.",
+        "Cinematic",
+    )
+
+    assert "Anu" in story
+    assert "magical garden" in story
+    assert "Kerala" in story
+    assert "Buddhist temple" not in story
+    assert "KGF Vissers" not in story
