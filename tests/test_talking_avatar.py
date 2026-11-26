@@ -20,6 +20,8 @@ def test_generate_talking_avatar_invokes_configured_sadtalker(monkeypatch, tmp_p
     monkeypatch.setenv("SADTALKER_DIR", str(model_dir))
     monkeypatch.delenv("SADTALKER_CHECKPOINT_DIR", raising=False)
     monkeypatch.delenv("SADTALKER_FORCE_CPU", raising=False)
+    monkeypatch.delenv("SADTALKER_API_URL", raising=False)
+    monkeypatch.delenv("SADTALKER_API_TOKEN", raising=False)
 
     image_path = tmp_path / "presenter.png"
     audio_path = tmp_path / "voice.wav"
