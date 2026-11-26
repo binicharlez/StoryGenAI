@@ -58,3 +58,19 @@ def test_generate_talking_avatar_invokes_configured_sadtalker(monkeypatch, tmp_p
     assert "--driven_audio" in captured["command"]
     assert "--still" not in captured["command"]
     assert "--ref_pose" in captured["command"]
+
+
+def test_remote_status_requires_token(monkeypatch):
+    monkeypatch.setenv("SADTALKER_API_URL", "https://avatar.example")
+    monkeypatch.delenv("SADTALKER_API_TOKEN", raising=False)
+    ready, message = talking_avatar.sadtalker_status()
+    assert not ready
+    assert "TOKEN" in message
+
+
+def test_remote_status_ready_when_url_and_token_set(monkeypatch):
+    monkeypatch.setenv("SADTALKER_API_URL", "https://avatar.example")
+    monkeypatch.setenv("SADTALKER_API_TOKEN", "test-token")
+    ready, message = talking_avatar.sadtalker_status()
+    assert ready
+    assert "remote" in message.lower()
