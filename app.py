@@ -1,6 +1,8 @@
+import io
 import json
 import re
 import tempfile
+import zipfile
 from pathlib import Path
 
 import streamlit as st
@@ -144,29 +146,33 @@ if plan:
         mime="application/x-subrip",
     )
 
-    st.markdown("### 🎥 Photo-based presenter")
-    st.write("Upload your own reference photo(s). They are processed for this session and are not added to the public GitHub repository.")
-    presenter_photos = st.file_uploader(
-        "Upload presenter photo(s)",
-        type=["png", "jpg", "jpeg"],
-        accept_multiple_files=True,
-        key="presenter_photo_upload",
-    )
-    selected_photo = None
-    if presenter_photos:
-        photo_names = [photo.name for photo in presenter_photos]
-        selected_photo_name = st.selectbox("Choose the photo for this video", photo_names)
-        selected_photo = next(photo for photo in presenter_photos if photo.name == selected_photo_name)
+    st.markdown("### 🎥 Your presenter photos")
+    st.caption("Your reference photos are loaded from the ZIP in this private repository.")
+    bundled_zip = Path(__file__).resolve().parent / "StoryGenAI_reference_photos (1).zip"
+    bundled_images = {}
+    if bundled_zip.exists():
         try:
-            selected_photo.seek(0)
-            preview_image = Image.open(selected_photo).convert("RGB")
-            st.image(preview_image, caption="Selected presenter reference", use_container_width=True)
-            selected_photo.seek(0)
-        except Exception as photo_error:
-            st.error(f"Could not read this photo: {photo_error}")
-            selected_photo = None
-    st.info("This photo mode places your photo in the portrait video with narration and captions. Natural hand gestures, facial animation, and lip-sync require a separate talking-avatar model and are not yet available in this app version.")
-
+            with zipfile.ZipFile(bundled_zip) as archive:
+                for name in sorted(archive.namelist()):
+                    if name.lower().endswith((".jpg", ".jpeg", ".png")) and not name.startswith("__MACOSX/"):
+                        bundled_images[Path(name).name] = archive.read(name)
+        except (OSError, zipfile.BadZipFile) as photo_error:
+            st.warning("Could not read the reference-photo ZIP: " + str(photo_error))
+    uploaded_photos = st.file_uploader("Add or replace photo(s)", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
+    uploaded_by_name = {photo.name: photo for photo in (uploaded_photos or [])}
+    photo_choices = list(bundled_images)
+    photo_choices.extend(name for name in uploaded_by_name if name not in photo_choices)
+    selected_photo = None
+    if photo_choices:
+        chosen_name = st.selectbox("Select your reference photo", photo_choices)
+        if chosen_name in uploaded_by_name:
+            selected_photo = Image.open(uploaded_by_name[chosen_name]).convert("RGB")
+        else:
+            selected_photo = Image.open(io.BytesIO(bundled_images[chosen_name])).convert("RGB")
+        st.image(selected_photo, caption="Selected presenter photo", use_container_width=True)
+    else:
+        st.info("No bundled photos found. Upload a photo to continue.")
+    st.info("This version uses a still photo with narration and captions. Face animation, hand gestures, and lip-sync are not yet implemented.")
     narration_file = st.file_uploader("Optional recorded narration", type=["wav", "mp3", "m4a", "aac", "ogg", "flac"])
     voice_options = {
         "English — US": "en-us",
@@ -214,10 +220,7 @@ if plan:
             with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_video:
                 temporary_video = Path(temp_video.name)
             with st.spinner("Rendering video and adding narration..."):
-                avatar_image = None
-                if selected_photo is not None:
-                    selected_photo.seek(0)
-                    avatar_image = Image.open(selected_photo).convert("RGB")
+                avatar_image = selected_photo
                 render_story_video(plan, temporary_video, avatar_image=avatar_image)
                 if narration_file is not None:
                     audio_suffix = Path(narration_file.name).suffix.lower() or ".wav"
