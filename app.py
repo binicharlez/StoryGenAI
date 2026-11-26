@@ -1,5 +1,6 @@
 import io
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -21,6 +22,15 @@ from storygenai.talking_avatar import generate_talking_avatar, sadtalker_status
 
 settings = get_settings()
 ensure_project_dirs(settings)
+
+# Streamlit Cloud Secrets are available through st.secrets, not guaranteed as OS env vars.
+for secret_name in ("SADTALKER_API_URL", "SADTALKER_API_TOKEN", "SADTALKER_DIR", "SADTALKER_PYTHON", "SADTALKER_CHECKPOINT_DIR"):
+    try:
+        secret_value = st.secrets.get(secret_name)
+    except Exception:
+        secret_value = None
+    if secret_value and not os.environ.get(secret_name):
+        os.environ[secret_name] = str(secret_value)
 
 st.set_page_config(page_title="Story Generator", page_icon="📖", layout="centered")
 st.title("📖 StoryGenAI: Bring Your Imagination to Life!")
