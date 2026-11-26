@@ -47,6 +47,60 @@ if submitted:
 
 plan = st.session_state.get("story_plan")
 if plan:
+    st.markdown("### Scene editor")
+    st.caption("Edit the story before rendering. Scene durations determine the video timeline.")
+    with st.form("scene_editor_form"):
+        edited_hook = st.text_area("Hook", value=plan.get("hook", ""), key="editor_hook")
+        edited_scenes = []
+        for scene in plan.get("scenes", []):
+            st.markdown(f'**Scene {scene["scene"]}**')
+            edited_title = st.text_input(
+                "Scene title",
+                value=scene.get("title", ""),
+                key=f'editor_title_{scene["scene"]}',
+            )
+            edited_narration = st.text_area(
+                "Scene narration",
+                value=scene.get("narration", ""),
+                key=f'editor_narration_{scene["scene"]}',
+            )
+            edited_duration = st.number_input(
+                "Scene duration (seconds)",
+                min_value=1,
+                max_value=90,
+                value=max(1, int(scene.get("duration_seconds", 1))),
+                step=1,
+                key=f'editor_duration_{scene["scene"]}',
+            )
+            edited_scenes.append(
+                {
+                    **scene,
+                    "title": edited_title.strip() or f'Scene {scene["scene"]}',
+                    "narration": edited_narration.strip(),
+                    "duration_seconds": int(edited_duration),
+                }
+            )
+        edited_cta = st.text_area(
+            "Call to action",
+            value=plan.get("call_to_action", ""),
+            key="editor_cta",
+        )
+        save_edits = st.form_submit_button("Apply scene edits")
+    if save_edits:
+        plan["hook"] = edited_hook.strip()
+        plan["scenes"] = edited_scenes
+        plan["call_to_action"] = edited_cta.strip()
+        plan["duration_seconds"] = sum(scene["duration_seconds"] for scene in edited_scenes)
+        plan["narration"] = " ".join(
+            [plan["hook"]]
+            + [scene["narration"] for scene in edited_scenes]
+            + [plan["call_to_action"]]
+        ).strip()
+        st.session_state["story_plan"] = plan
+        st.session_state.pop("story_video_bytes", None)
+        st.session_state.pop("generated_narration_bytes", None)
+        st.success("Edits applied. Generate narration and render again to use the updated story.")
+        st.rerun()
     st.success("Your story outline is ready!")
     st.subheader(plan["title"])
     st.caption(f'{plan["style"]} · {plan["duration_seconds"]} seconds')
