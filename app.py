@@ -20,13 +20,13 @@ st.set_page_config(page_title="StoryGenAI", page_icon="🎬", layout="centered")
 st.title("🎬 StoryGenAI")
 st.subheader("Turn your ideas into short-form stories")
 st.write(
-    "Create a structured story outline and export it as a vertical video. "
+    "Create a structured English or Malayalam story outline and export it as a vertical video. "
     "This prototype uses local templates and open-source rendering tools."
 )
 
 st.info(
     "The video uses text scene cards. You can upload your own narration recording "
-    "to add voice audio. Offline text-to-speech is available with selectable voice and speed; face animation is not connected yet."
+    "to add voice audio. Offline text-to-speech is available with selectable voice and speed; Malayalam script templates are available; face animation is not connected yet."
 )
 
 with st.form("story_form"):
