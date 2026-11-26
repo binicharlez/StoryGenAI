@@ -172,7 +172,7 @@ if plan:
         help="A short video of you sitting upright and gesturing can guide the model's body/head pose. Use your own video.",
     )
     animation_mode = "Talking avatar (SadTalker)"
-    st.info("Talking-avatar rendering is selected. This app will not fall back to a still photo. SadTalker and its checkpoints must be installed in the runtime for animated output.")
+    st.info("Talking-avatar rendering is selected. The app will not export a still-photo video as a talking avatar. Configure a local SadTalker model or an authenticated GPU inference service to render animation.")
     pose_style = st.slider("Avatar head-motion style", min_value=0, max_value=45, value=0, step=1)
     sadtalker_ready, sadtalker_message = sadtalker_status()
     if animation_mode == "Talking avatar (SadTalker)":
@@ -181,8 +181,8 @@ if plan:
             st.caption("SadTalker animates facial movement and lip-sync. Add a short MP4 of yourself sitting upright and gesturing as a pose reference to guide body/head motion; results are not guaranteed to reproduce natural hand gestures perfectly.")
         else:
             st.warning("Talking-avatar model is not installed in this Streamlit runtime.")
-            st.code("Set SADTALKER_DIR to a SadTalker checkout with its checkpoints. See the README setup section.")
-            st.caption("Streamlit Community Cloud's standard CPU/memory limits are not suitable for running this large model reliably. Use a local or GPU runtime.")
+            st.code("Hosted deployment: set SADTALKER_API_URL and SADTALKER_API_TOKEN in Streamlit Secrets. Local inference: set SADTALKER_DIR and install SadTalker plus checkpoints. See README.")
+            st.caption("The hosted Streamlit app needs a separate GPU inference service for reliable animation. Configure the API URL and token after deploying the private avatar service.")
     narration_file = st.file_uploader("Optional recorded narration", type=["wav", "mp3", "m4a", "aac", "ogg", "flac"])
     voice_options = {
         "English — US": "en-us",
@@ -270,7 +270,7 @@ if plan:
                 if animation_mode == "Talking avatar (SadTalker)":
                     ready, reason = sadtalker_status()
                     if not ready:
-                        raise RuntimeError(reason + ". Install SadTalker and checkpoints, or select Photo + captions.")
+                        raise RuntimeError(reason + ". Configure SADTALKER_API_URL and SADTALKER_API_TOKEN in Streamlit Secrets, or install SadTalker and checkpoints locally.")
                     with tempfile.NamedTemporaryFile(suffix=".png", dir=settings.outputs_dir, delete=False) as source_file:
                         temporary_source = Path(source_file.name)
                         selected_photo.save(source_file, format="PNG")
