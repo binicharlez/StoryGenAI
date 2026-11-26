@@ -19,7 +19,7 @@ StoryGenAI is an early-stage Streamlit project for turning text ideas into creat
 
 The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The video contains text scene cards. You can upload your own narration recording and the app will pad or trim it to the planned video duration. The app can generate basic offline narration using espeak-ng, select from several English voice variants including Indian English and Malayalam, adjust speech speed, or accept a recorded voice track. English is the default script language. Malayalam mode provides Malayalam hooks, scene titles, scene narration guidance, and a Malayalam call-to-action; enter your topic in Malayalam for Malayalam narration text. The Malayalam voice does not translate English input. Voice cloning, generated footage, and face animation are not connected yet.
 
-## Run in GitHub Codespaces
+## Deploy as a live website (Streamlit Community Cloud)\n\n1. Sign in to [Streamlit Community Cloud](https://share.streamlit.io/) with GitHub.\n2. Choose **Create app** and select `binicharlez/StoryGenAI`.\n3. Select branch `main` and main file path `app.py`.\n4. Click **Deploy**. The `requirements.txt` and `packages.txt` files install the app dependencies.\n5. Streamlit will provide the live website URL after deployment completes.\n\nThe repository is prepared for deployment, but pushing code to GitHub does not automatically create a Streamlit-hosted URL unless the app is connected and deployed there.\n\n## Run in GitHub Codespaces
 
 1. Open this repository on GitHub.
 2. Select **Code → Codespaces → Create codespace on main**.
