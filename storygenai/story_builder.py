@@ -86,3 +86,42 @@ def build_story_plan(idea: str, style: str, duration_seconds: int, language: str
         "scenes": scenes,
         "call_to_action": _CTA[language],
     }
+
+
+def generate_short_story(idea: str, style: str = "Cinematic", language: str = "English") -> str:
+    """Generate a complete short story locally from a simple story template."""
+    cleaned_idea = re.sub(r"\\s+", " ", idea).strip()
+    if not cleaned_idea:
+        raise ValueError("Please provide a story idea.")
+    if style not in {"Educational", "Motivational", "Funny", "Cinematic"}:
+        raise ValueError(f"Unsupported story style: {style}")
+    if language not in {"English", "Malayalam"}:
+        raise ValueError(f"Unsupported story language: {language}")
+
+    if language == "Malayalam":
+        return (
+            f"{cleaned_idea} എന്ന ആശയത്തെ ചുറ്റിപ്പറ്റിയാണ് ഈ കഥ. "
+            "ഒരു ദിവസം മീരയ്ക്ക് ഒരു അസാധാരണമായ കാര്യം കണ്ടെത്താനായി. "
+            "ആദ്യം അവൾക്ക് എന്തുചെയ്യണമെന്ന് മനസ്സിലായില്ല, പക്ഷേ ധൈര്യത്തോടെ മുന്നോട്ട് പോയി. "
+            "സുഹൃത്തുക്കളുടെ സഹായത്തോടെ അവൾ പ്രശ്നത്തിന് ഒരു നല്ല പരിഹാരം കണ്ടെത്തി. "
+            "അന്ന് മീര പഠിച്ചത്, ചെറിയൊരു ആശയത്തിനുപോലും വലിയ മാറ്റം സൃഷ്ടിക്കാനാകുമെന്നാണ്."
+        )
+
+    openings = {
+        "Educational": f"One bright morning, a curious child named Mira discovered something fascinating about {cleaned_idea}.",
+        "Motivational": f"In a world shaped by {cleaned_idea}, Mira had one dream that everyone said was impossible.",
+        "Funny": f"Mira's day started normally, until {cleaned_idea} turned everything upside down.",
+        "Cinematic": f"The wind fell silent as Mira came face to face with {cleaned_idea}.",
+    }
+    middle = (
+        "At first, the problem seemed too big to solve. Mira paused, looked carefully, "
+        "and noticed a small clue that everyone else had missed. Instead of giving up, "
+        "she asked for help and tried a new approach."
+    )
+    endings = {
+        "Educational": "By sunset, Mira understood that curiosity and careful observation can turn a confusing problem into a valuable lesson.",
+        "Motivational": "Step by step, Mira moved forward. The journey taught her that courage is not having no fear—it is taking the next step despite it.",
+        "Funny": "Her plan worked perfectly—except for one tiny detail that made the whole village laugh. Mira laughed loudest of all.",
+        "Cinematic": "As the final light crossed the horizon, Mira knew the moment had changed her forever. A new adventure was already waiting.",
+    }
+    return f"{openings[style]}\\n\\n{middle}\\n\\n{endings[style]}"
