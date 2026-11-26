@@ -82,7 +82,6 @@ def generate_talking_avatar(
         "--preprocess", preprocess,
         "--size", str(size),
         "--pose_style", str(pose_style),
-        "--still",
         "--verbose",
     ]
     if pose_video_path is not None:
