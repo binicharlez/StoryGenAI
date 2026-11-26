@@ -79,6 +79,7 @@ if plan:
     narration_file = st.file_uploader("Optional recorded narration", type=["wav", "mp3", "m4a", "aac", "ogg", "flac"])
     voice_options = {
         "English — US": "en-us",
+        "English — India (Indian English)": "en-in",
         "English — UK": "en-gb",
         "English — Scottish": "en-sc",
         "English — UK (RP)": "en-gb-x-rp",
