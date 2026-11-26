@@ -38,6 +38,9 @@ with st.form("story_form"):
 
 if submitted:
     try:
+        for editor_key in list(st.session_state):
+            if editor_key.startswith("editor_"):
+                del st.session_state[editor_key]
         st.session_state["story_plan"] = build_story_plan(prompt, style, duration, language=script_language)
         st.session_state.pop("story_video_bytes", None)
         st.session_state.pop("generated_narration_bytes", None)
@@ -146,7 +149,7 @@ if plan:
     selected_voice_label = st.selectbox("Generated voice", voice_labels, index=default_voice_index)
     selected_voice = voice_options[selected_voice_label]
     if selected_voice == "ml":
-        st.info("Malayalam voice selected. The current story builder creates English scripts and this voice does not translate them. For Malayalam speech, use a Malayalam narration recording for now; editable Malayalam scripts/translation are a future feature.")
+        st.info("Malayalam voice selected. This voice reads Malayalam text but does not translate English narration. Choose Malayalam script mode and enter your topic in Malayalam for a Malayalam narration draft.")
     speech_speed = st.slider("Speech speed (words per minute)", min_value=100, max_value=220, value=155, step=5)
     if st.button("Generate narration audio (offline)"):
         temporary_tts = None
