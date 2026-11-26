@@ -43,3 +43,19 @@ def test_malayalam_story_plan_uses_malayalam_template_and_voice_language():
 def test_unsupported_story_language_is_rejected():
     with pytest.raises(ValueError, match="language"):
         build_story_plan("A topic", "Educational", 15, language="Tamil")
+
+
+def test_generate_short_story_returns_complete_story_for_idea():
+    from storygenai.story_builder import generate_short_story
+
+    story = generate_short_story("a big village", "Cinematic")
+    assert "a big village" in story
+    assert len(story.split()) > 40
+    assert "\\n\\n" in story
+
+
+def test_generate_short_story_rejects_empty_idea():
+    from storygenai.story_builder import generate_short_story
+
+    with pytest.raises(ValueError, match="story idea"):
+        generate_short_story("   ")
