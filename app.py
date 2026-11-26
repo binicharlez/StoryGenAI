@@ -215,3 +215,6 @@ if plan:
             file_name=st.session_state.get("story_video_name", "storygenai.mp4"),
             mime="video/mp4",
         )
+
+st.markdown("---")
+st.markdown("<div style=\"text-align:center; color:gray; font-weight:600;\">⭐ Made by Bini Mol N C ⭐</div>", unsafe_allow_html=True)
