@@ -56,5 +56,5 @@ def test_generate_talking_avatar_invokes_configured_sadtalker(monkeypatch, tmp_p
     assert output.name == "fake-avatar.mp4"
     assert "--source_image" in captured["command"]
     assert "--driven_audio" in captured["command"]
-    assert "--still" in captured["command"]
+    assert "--still" not in captured["command"]
     assert "--ref_pose" in captured["command"]
