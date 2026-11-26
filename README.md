@@ -8,10 +8,11 @@ StoryGenAI is an early-stage Streamlit project for turning text ideas into creat
 - Offline template-based narration draft and scene outline
 - Visual prompts for each scene
 - JSON export of the story plan
+- **Silent vertical MP4 export** with text-based scene cards (9:16, H.264)
 - Configuration and safe file-management utilities
 - Automated tests through GitHub Actions
 
-The current story builder is deterministic and template-based. It does not call an AI API. Video rendering, voice generation, face animation, and model integration are not connected yet.
+The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The current video contains text scene cards only; generated footage, narration audio, voice cloning, and face animation are not connected yet.
 
 ## Run in GitHub Codespaces
 
@@ -25,6 +26,7 @@ The current story builder is deterministic and template-based. It does not call 
    ```
 
 5. Open the forwarded port **8501** when prompted.
+6. Enter a story idea, prepare the outline, then select **Render vertical MP4** and download the result.
 
 The Codespaces configuration installs the Python dependencies automatically.
 
