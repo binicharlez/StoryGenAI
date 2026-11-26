@@ -299,10 +299,6 @@ if plan:
                     temporary_path.unlink(missing_ok=True)
             if temporary_avatar_dir is not None:
                 shutil.rmtree(temporary_avatar_dir, ignore_errors=True)
-nally:
-            for temporary_path in (temporary_video, temporary_audio, temporary_final):
-                if temporary_path is not None:
-                    temporary_path.unlink(missing_ok=True)
     video_bytes = st.session_state.get("story_video_bytes")
     if video_bytes:
         st.success("Your MP4 is ready.")
