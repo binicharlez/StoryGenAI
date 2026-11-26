@@ -10,19 +10,19 @@ StoryGenAI is an early-stage Streamlit project for turning text ideas into creat
 - Visual prompts for each scene
 - In-app scene editor for the hook, scene titles, narration, durations, and call-to-action before export
 - JSON export of the story plan
-- **Silent vertical MP4 export** with hook, scene, and call-to-action cards (9:16, H.264)
+- Vertical MP4 export (9:16, H.264) with narration and captions; still-photo mode or optional audio-driven SadTalker face animation
 - SRT subtitle export aligned to the story timeline
 - Optional user-recorded narration upload (WAV, MP3, M4A, AAC, OGG, FLAC) muxed into the MP4
 - Offline text-to-speech narration using the free espeak-ng engine, with selectable English voice variants including Indian English and Malayalam, and speech speed
 - Configuration and safe file-management utilities
 - Automated tests through GitHub Actions
 
-The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The video contains text scene cards. You can upload your own narration recording and the app will pad or trim it to the planned video duration. The app can generate basic offline narration using espeak-ng, select from several English voice variants including Indian English and Malayalam, adjust speech speed, or accept a recorded voice track. English is the default script language. Malayalam mode provides Malayalam hooks, scene titles, scene narration guidance, and a Malayalam call-to-action; enter your topic in Malayalam for Malayalam narration text. The Malayalam voice does not translate English input. Voice cloning is not connected. An optional SadTalker adapter is included for audio-driven facial animation and lip-sync, but the SadTalker code and model checkpoints must be installed separately on a local/GPU machine. It is not bundled into the Streamlit Community Cloud deployment.
+The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The default video uses story cards or a selected presenter photo. You can upload your own narration recording and the app will pad or trim it to the planned video duration. When SadTalker is installed locally, the talking-avatar mode animates the face and lip-syncs to the audio. The app can generate basic offline narration using espeak-ng, select from several English voice variants including Indian English and Malayalam, adjust speech speed, or accept a recorded voice track. English is the default script language. Malayalam mode provides Malayalam hooks, scene titles, scene narration guidance, and a Malayalam call-to-action; enter your topic in Malayalam for Malayalam narration text. The Malayalam voice does not translate English input. Voice cloning is not connected. An optional SadTalker adapter is included for audio-driven facial animation and lip-sync, but the SadTalker code and model checkpoints must be installed separately on a local/GPU machine. It is not bundled into the Streamlit Community Cloud deployment.
 
 
 ## Talking-avatar mode (SadTalker)
 
-StoryGenAI includes an optional adapter for [OpenTalker/SadTalker](https://github.com/OpenTalker/SadTalker). Given a presenter photo and narration WAV, it runs SadTalker to animate facial movement and lip-sync, then adds the narration track to the MP4. It supports full-image preprocessing and a pose-style setting. This does **not** generate reliable natural hand gestures; a still image cannot supply unseen body motion.
+StoryGenAI includes an optional adapter for [OpenTalker/SadTalker](https://github.com/OpenTalker/SadTalker). Given a presenter photo and narration WAV, it runs SadTalker to animate facial movement and lip-sync, then adds the narration track to the MP4. It supports full-image preprocessing and a pose-style setting. An optional short MP4 pose-reference video of you sitting upright and gesturing can guide the generated pose through SadTalker’s reference-pose option. This is a pose-transfer aid, not a guarantee of perfectly natural hand gestures.
 
 ### Install for local/GPU use
 
@@ -35,7 +35,7 @@ StoryGenAI includes an optional adapter for [OpenTalker/SadTalker](https://githu
 
    Optionally set SADTALKER_CHECKPOINT_DIR if your checkpoints are stored elsewhere. Set SADTALKER_FORCE_CPU=1 to force CPU inference.
 
-4. In StoryGenAI, select **Talking avatar (SadTalker)**, upload a presenter photo, generate or upload narration, and render.
+4. In StoryGenAI, select **Talking avatar (SadTalker)**, upload a presenter photo, optionally upload a short MP4 of yourself sitting upright and gesturing as a pose reference, generate or upload narration, and render.
 
 SadTalker is a large model and is not downloaded automatically. The app checks whether its inference script and checkpoints are present and reports a setup message if they are missing. Streamlit Community Cloud's standard resource limits are generally unsuitable for large CPU-based avatar inference; use a local runtime or a GPU environment. Test a short clip first.
 
