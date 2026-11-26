@@ -96,3 +96,47 @@ Optional environment variables:
 - `STORYGENAI_DATA_DIR`
 
 Keep real credentials in GitHub Actions secrets or a trusted secrets manager. Never commit credentials or private user media to the repository.
+
+
+## Hosted talking-avatar inference (GPU service)
+
+The Streamlit website is the **front end**. SadTalker must run on a separate machine with a supported GPU and its model checkpoints. This repository now includes an authenticated FastAPI inference service; the Streamlit app can call it instead of trying to load SadTalker inside the web app.
+
+### 1. Prepare a GPU machine
+
+On a GPU host you control, clone this repository and install SadTalker and its checkpoints using the [official SadTalker installation guide](https://github.com/OpenTalker/SadTalker/blob/main/docs/install.md). The service and SadTalker must run in the same environment or be configured with `SADTALKER_DIR` and `SADTALKER_PYTHON`.
+
+Install the service dependencies from this repository:
+
+```bash
+python -m pip install -r avatar-service-requirements.txt
+```
+
+Configure the local SadTalker paths and a long random service token (do not use the example value):
+
+```bash
+export SADTALKER_DIR="/path/to/SadTalker"
+export SADTALKER_PYTHON="/path/to/sadtalker-env/bin/python"
+export SADTALKER_SERVICE_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+uvicorn avatar_service:app --host 0.0.0.0 --port 8000
+```
+
+Put the service behind HTTPS (for example, a reverse proxy or your GPU host's HTTPS ingress). Do not expose port 8000 directly to the public internet without HTTPS and access controls. The service requires a bearer token, limits upload sizes, permits one GPU inference at a time, and deletes uploaded media after the MP4 response is sent. Keep the token private.
+
+### 2. Connect the Streamlit website
+
+In Streamlit Community Cloud, open your app's **Settings → Secrets** and add:
+
+```toml
+SADTALKER_API_URL = "https://your-https-gpu-host"
+SADTALKER_API_TOKEN = "the-same-long-random-token"
+```
+
+Restart/reboot the Streamlit app. The status should report that authenticated remote inference is configured. Upload a photo and narration, then render. The app downloads the generated MP4 from the GPU service and adds the final audio track.
+
+### Important
+
+- This service code is committed, but it is **not deployed or GPU-tested by GitHub Actions**. You still need to install SadTalker/checkpoints and start it on a GPU host, then add the URL and token to Streamlit Secrets.
+- GPU hosting may cost money; a free, continuously available GPU endpoint is not guaranteed. Do not enter payment details or deploy paid resources without checking the provider's price and shutdown policy.
+- SadTalker creates audio-driven facial/head animation. A single photo does not guarantee realistic full-body movement or natural hand gestures. A pose-reference video can guide the pose but is not a guarantee.
+- Test first with a short narration and a photo you have permission to animate. Never commit personal photos, narration, or generated videos to this public repository.
