@@ -171,11 +171,8 @@ if plan:
         type=["mp4"],
         help="A short video of you sitting upright and gesturing can guide the model's body/head pose. Use your own video.",
     )
-    animation_mode = st.radio(
-        "Video animation",
-        ["Talking avatar (SadTalker)", "Photo + captions"],
-        help="Talking-avatar mode is selected by default. It requires SadTalker and its checkpoints installed in this runtime; it will not silently switch to a still photo.",
-    )
+    animation_mode = "Talking avatar (SadTalker)"
+    st.info("Talking-avatar rendering is selected. This app will not fall back to a still photo. SadTalker and its checkpoints must be installed in the runtime for animated output.")
     pose_style = st.slider("Avatar head-motion style", min_value=0, max_value=45, value=0, step=1)
     sadtalker_ready, sadtalker_message = sadtalker_status()
     if animation_mode == "Talking avatar (SadTalker)":
