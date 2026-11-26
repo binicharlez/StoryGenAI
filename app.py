@@ -32,12 +32,13 @@ st.info(
 with st.form("story_form"):
     prompt = st.text_area("Your story idea", placeholder="A short story about...")
     style = st.selectbox("Story style", ["Educational", "Motivational", "Funny", "Cinematic"])
+    script_language = st.selectbox("Script language", ["English", "Malayalam"])
     duration = st.slider("Target duration (seconds)", min_value=15, max_value=90, value=30, step=5)
     submitted = st.form_submit_button("Prepare story")
 
 if submitted:
     try:
-        st.session_state["story_plan"] = build_story_plan(prompt, style, duration)
+        st.session_state["story_plan"] = build_story_plan(prompt, style, duration, language=script_language)
         st.session_state.pop("story_video_bytes", None)
         st.session_state.pop("generated_narration_bytes", None)
     except ValueError as error:
@@ -86,7 +87,9 @@ if plan:
         "English — UK (RP)": "en-gb-x-rp",
         "English — US (female variant)": "en-us+f3",
     }
-    selected_voice_label = st.selectbox("Generated voice", list(voice_options))
+    voice_labels = list(voice_options)
+    default_voice_index = voice_labels.index("Malayalam (മലയാളം)") if plan.get("language") == "Malayalam" else 0
+    selected_voice_label = st.selectbox("Generated voice", voice_labels, index=default_voice_index)
     selected_voice = voice_options[selected_voice_label]
     if selected_voice == "ml":
         st.info("Malayalam voice selected. The current story builder creates English scripts and this voice does not translate them. For Malayalam speech, use a Malayalam narration recording for now; editable Malayalam scripts/translation are a future feature.")
