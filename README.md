@@ -8,6 +8,7 @@ StoryGenAI is an early-stage Streamlit project for turning text ideas into creat
 - English or Malayalam script templates (Malayalam input topic is retained as entered)
 - Offline template-based narration draft and scene outline
 - Visual prompts for each scene
+- In-app scene editor for the hook, scene titles, narration, durations, and call-to-action before export
 - JSON export of the story plan
 - **Silent vertical MP4 export** with hook, scene, and call-to-action cards (9:16, H.264)
 - SRT subtitle export aligned to the story timeline
@@ -30,7 +31,7 @@ The story builder is deterministic and template-based. MP4 rendering uses Pillow
    ```
 
 5. Open the forwarded port **8501** when prompted.
-6. Enter a story idea, prepare the outline, select **Generate narration audio (offline)** or optionally upload your own recording, then select **Render vertical MP4** and download the result.
+6. Enter a story idea, prepare the outline, select **Generate narration audio (offline)** or optionally upload your own recording, edit the hook/scenes/CTA in the Scene editor and apply changes, then select **Render vertical MP4** and download the result.
 
 The Codespaces configuration installs Python dependencies, espeak-ng, and Noto fonts for Malayalam text automatically.
 
