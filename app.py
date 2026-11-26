@@ -16,25 +16,22 @@ from storygenai.video_renderer import render_story_video
 settings = get_settings()
 ensure_project_dirs(settings)
 
-st.set_page_config(page_title="StoryGenAI", page_icon="🎬", layout="centered")
-st.title("🎬 StoryGenAI")
-st.subheader("Turn your ideas into short-form stories")
+st.set_page_config(page_title="Story Generator", page_icon="📖", layout="centered")
+st.title("📖 Story Generator: Bring Your Imagination to Life!")
+st.subheader("Create captivating short stories in seconds! ✍️✨")
 st.write(
-    "Create a structured English or Malayalam story outline and export it as a vertical video. "
-    "This prototype uses local templates and open-source rendering tools."
+    "Welcome to Story Generator, your storytelling assistant!\\n\\n"
+    "Describe an idea, character, or setting and turn it into a short story. "
+    "You can then edit the scenes, create narration, and export a vertical video."
 )
-
-st.info(
-    "The video uses text scene cards. You can upload your own narration recording "
-    "to add voice audio. Offline text-to-speech is available with selectable voice and speed; Malayalam script templates are available; face animation is not connected yet."
-)
+st.caption("Stories are generated locally from story templates—no paid API is required.")
 
 with st.form("story_form"):
-    prompt = st.text_area("Your story idea", placeholder="A short story about...")
+    prompt = st.text_area("Describe a character and a setting:", placeholder="e.g., a curious child in a big village")
     style = st.selectbox("Story style", ["Educational", "Motivational", "Funny", "Cinematic"])
     script_language = st.selectbox("Script language", ["English", "Malayalam"])
     duration = st.slider("Target duration (seconds)", min_value=15, max_value=90, value=30, step=5)
-    submitted = st.form_submit_button("Prepare story")
+    submitted = st.form_submit_button("✨ Generate Story")
 
 if submitted:
     try:
@@ -42,14 +39,26 @@ if submitted:
             if editor_key.startswith("editor_"):
                 del st.session_state[editor_key]
         st.session_state["story_plan"] = build_story_plan(prompt, style, duration, language=script_language)
+        st.session_state["generated_story_text"] = generate_short_story(prompt, style, language=script_language)
         st.session_state.pop("story_video_bytes", None)
         st.session_state.pop("generated_narration_bytes", None)
     except ValueError as error:
         st.warning(str(error))
         st.session_state.pop("story_plan", None)
+        st.session_state.pop("generated_story_text", None)
 
 plan = st.session_state.get("story_plan")
 if plan:
+    st.success("Your story is ready!")
+    st.markdown("### 📚 Generated story")
+    story_text = st.session_state.get("generated_story_text", plan["narration"])
+    st.write(story_text)
+    st.download_button(
+        "Download story (TXT)",
+        data=story_text,
+        file_name="generated_story.txt",
+        mime="text/plain",
+    )
     st.markdown("### Scene editor")
     st.caption("Edit the story before rendering. Scene durations determine the video timeline.")
     with st.form("scene_editor_form"):
