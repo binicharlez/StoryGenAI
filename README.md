@@ -8,7 +8,8 @@ StoryGenAI is an early-stage Streamlit project for turning text ideas into creat
 - Offline template-based narration draft and scene outline
 - Visual prompts for each scene
 - JSON export of the story plan
-- **Silent vertical MP4 export** with text-based scene cards (9:16, H.264)
+- **Silent vertical MP4 export** with hook, scene, and call-to-action cards (9:16, H.264)
+- SRT subtitle export aligned to the story timeline
 - Configuration and safe file-management utilities
 - Automated tests through GitHub Actions
 
