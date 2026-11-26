@@ -9,7 +9,7 @@ from typing import Any
 import imageio_ffmpeg
 
 from storygenai.captions import caption_segments
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 
 WIDTH = 1080
@@ -105,12 +105,39 @@ def _make_frame(scene: dict[str, Any], scene_number: int, scene_count: int, styl
     return image
 
 
+
+def _make_avatar_frame(
+    avatar_image: Image.Image,
+    scene: dict[str, Any],
+    width: int,
+    height: int,
+) -> Image.Image:
+    """Create a portrait photo-based scene frame; does not animate facial features."""
+    source = avatar_image.convert("RGB")
+    frame = ImageOps.fit(source, (width, height), method=Image.Resampling.LANCZOS, centering=(0.5, 0.42))
+    draw = ImageDraw.Draw(frame, "RGBA")
+    caption_font = _font(max(24, int(width * 0.043)), bold=True)
+    text = str(scene.get("narration", "")).strip()
+    lines = _wrap_text(draw, text, caption_font, int(width * 0.82))
+    line_height = int(caption_font.size * 1.35)
+    max_lines = max(2, min(5, int(height * 0.15 / line_height)))
+    lines = lines[:max_lines]
+    panel_height = line_height * len(lines) + int(height * 0.035)
+    top = height - panel_height
+    draw.rectangle((0, top, width, height), fill=(5, 10, 20, 185))
+    y = top + int(height * 0.018)
+    for line in lines:
+        draw.text((int(width * 0.08), y), line, font=caption_font, fill=(255, 255, 255, 255))
+        y += line_height
+    return frame
+
 def render_story_video(
     plan: dict[str, Any],
     output_path: str | Path,
     fps: int = FPS,
     width: int = WIDTH,
     height: int = HEIGHT,
+    avatar_image: Image.Image | None = None,
 ) -> Path:
     """Render a silent 9:16 MP4 from a story plan using bundled FFmpeg."""
     scenes = plan.get("scenes")
@@ -130,13 +157,22 @@ def render_story_video(
     segments = caption_segments(plan)
     scene_count = len(segments)
     frame_bytes = [
-        _make_frame(
-            {"title": segment["title"], "narration": segment["text"], "label": segment["title"].upper()},
-            index + 1,
-            scene_count,
-            str(plan.get("style", "Story")),
-            width,
-            height,
+        (
+            _make_avatar_frame(
+                avatar_image,
+                {"title": segment["title"], "narration": segment["text"], "label": segment["title"].upper()},
+                width,
+                height,
+            )
+            if avatar_image is not None
+            else _make_frame(
+                {"title": segment["title"], "narration": segment["text"], "label": segment["title"].upper()},
+                index + 1,
+                scene_count,
+                str(plan.get("style", "Story")),
+                width,
+                height,
+            )
         ).tobytes()
         for index, segment in enumerate(segments)
     ]
