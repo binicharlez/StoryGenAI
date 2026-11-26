@@ -181,7 +181,7 @@ if plan:
     if animation_mode == "Talking avatar (SadTalker)":
         if sadtalker_ready:
             st.success(sadtalker_message)
-            st.caption("SadTalker animates facial movement and lip-sync from your photo and narration. It does not generate realistic hand gestures.")
+            st.caption("SadTalker animates facial movement and lip-sync. Add a short MP4 of yourself sitting upright and gesturing as a pose reference to guide body/head motion; results are not guaranteed to reproduce natural hand gestures perfectly.")
         else:
             st.warning("Talking-avatar model is not installed in this Streamlit runtime.")
             st.code("Set SADTALKER_DIR to a SadTalker checkout with its checkpoints. See the README setup section.")
