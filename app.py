@@ -26,7 +26,7 @@ st.write(
 
 st.info(
     "The video uses text scene cards. You can upload your own narration recording "
-    "to add voice audio; automatic voice generation and face animation are not connected yet."
+    "to add voice audio. Offline text-to-speech is available with selectable voice and speed; face animation is not connected yet."
 )
 
 with st.form("story_form"):
@@ -77,13 +77,23 @@ if plan:
     )
 
     narration_file = st.file_uploader("Optional recorded narration", type=["wav", "mp3", "m4a", "aac", "ogg", "flac"])
+    voice_options = {
+        "English — US": "en-us",
+        "English — UK": "en-gb",
+        "English — Scottish": "en-sc",
+        "English — UK (RP)": "en-gb-x-rp",
+        "English — US (female variant)": "en-us+f3",
+    }
+    selected_voice_label = st.selectbox("Generated voice", list(voice_options))
+    selected_voice = voice_options[selected_voice_label]
+    speech_speed = st.slider("Speech speed (words per minute)", min_value=100, max_value=220, value=155, step=5)
     if st.button("Generate narration audio (offline)"):
         temporary_tts = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".wav", dir=settings.outputs_dir, delete=False) as temp_tts:
                 temporary_tts = Path(temp_tts.name)
             with st.spinner("Generating narration with the offline voice engine..."):
-                generate_narration(plan, temporary_tts)
+                generate_narration(plan, temporary_tts, voice=selected_voice, speed=speech_speed)
                 st.session_state["generated_narration_bytes"] = temporary_tts.read_bytes()
             st.success("Narration WAV generated. It will be added to your MP4.")
         except Exception as error:
