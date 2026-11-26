@@ -22,7 +22,7 @@ The story builder is deterministic and template-based. MP4 rendering uses Pillow
 
 ## Talking-avatar mode (SadTalker)
 
-StoryGenAI includes an optional adapter for [OpenTalker/SadTalker](https://github.com/OpenTalker/SadTalker). Given a presenter photo and narration WAV, it runs SadTalker to animate facial movement and lip-sync, then adds the narration track to the MP4. It supports full-image preprocessing and a pose-style setting. An optional short MP4 pose-reference video of you sitting upright and gesturing can guide the generated pose through SadTalker’s reference-pose option. This is a pose-transfer aid, not a guarantee of perfectly natural hand gestures.
+StoryGenAI includes an optional adapter for [OpenTalker/SadTalker](https://github.com/OpenTalker/SadTalker). Given a presenter photo and narration WAV, it runs SadTalker to animate facial movement and lip-sync, then adds the narration track to the MP4. It supports full-image preprocessing and a pose-style setting. The adapter does not pass SadTalker's `--still` flag, allowing audio-driven head motion. An optional short MP4 pose-reference video of you sitting upright and gesturing can guide the generated pose through SadTalker’s reference-pose option. This is a pose-transfer aid, not a guarantee of perfectly natural hand gestures.
 
 ### Install for local/GPU use
 
