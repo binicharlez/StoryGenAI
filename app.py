@@ -7,7 +7,7 @@ import streamlit as st
 
 from storygenai.config import get_settings
 from storygenai.file_utils import ensure_project_dirs
-from storygenai.story_builder import build_story_plan
+from storygenai.story_builder import build_story_plan, generate_short_story
 from storygenai.captions import generate_srt
 from storygenai.audio_mux import mux_audio
 from storygenai.tts import generate_narration
@@ -20,7 +20,7 @@ st.set_page_config(page_title="Story Generator", page_icon="📖", layout="cente
 st.title("📖 Story Generator: Bring Your Imagination to Life!")
 st.subheader("Create captivating short stories in seconds! ✍️✨")
 st.write(
-    "Welcome to Story Generator, your storytelling assistant!\\n\\n"
+    "Welcome to Story Generator, your storytelling assistant!\n\n"
     "Describe an idea, character, or setting and turn it into a short story. "
     "You can then edit the scenes, create narration, and export a vertical video."
 )
