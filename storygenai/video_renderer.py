@@ -49,14 +49,11 @@ def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, 
 
 def _make_frame(scene: dict[str, Any], scene_number: int, scene_count: int, style: str, width: int, height: int) -> Image.Image:
     image = Image.new("RGB", (width, height))
-    pixels = image.load()
+    draw = ImageDraw.Draw(image)
     for y in range(height):
         ratio = y / max(1, height - 1)
         color = (int(14 + 18 * ratio), int(24 + 12 * ratio), int(48 + 30 * ratio))
-        for x in range(width):
-            pixels[x, y] = color
-
-    draw = ImageDraw.Draw(image)
+        draw.line((0, y, width, y), fill=color)
     margin = int(width * 0.09)
     accent = (112, 190, 255)
     draw.rounded_rectangle(
@@ -115,7 +112,7 @@ def render_story_video(
     scene_count = len(segments)
     frame_bytes = [
         _make_frame(
-            {"title": segment["title"], "narration": segment["text"], "label": "CARD"},
+            {"title": segment["title"], "narration": segment["text"], "label": segment["title"].upper()},
             index + 1,
             scene_count,
             str(plan.get("style", "Story")),
