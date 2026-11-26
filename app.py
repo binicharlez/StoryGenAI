@@ -166,6 +166,11 @@ if plan:
         selected_photo = Image.open(selected_photo_file).convert("RGB")
         st.image(selected_photo, caption="Selected presenter reference", use_container_width=True)
 
+    pose_reference_video = st.file_uploader(
+        "Optional gesture/pose reference video (MP4)",
+        type=["mp4"],
+        help="A short video of you sitting upright and gesturing can guide the model's body/head pose. Use your own video.",
+    )
     animation_mode = st.radio(
         "Video animation",
         ["Photo + captions", "Talking avatar (SadTalker)"],
@@ -222,6 +227,7 @@ if plan:
         temporary_audio = None
         temporary_final = None
         temporary_source = None
+        temporary_pose_video = None
         temporary_avatar_dir = None
         try:
             if animation_mode == "Talking avatar (SadTalker)" and selected_photo is None:
@@ -271,6 +277,12 @@ if plan:
                     with tempfile.NamedTemporaryFile(suffix=".png", dir=settings.outputs_dir, delete=False) as source_file:
                         temporary_source = Path(source_file.name)
                         selected_photo.save(source_file, format="PNG")
+                    pose_video_path = None
+                    if pose_reference_video is not None:
+                        with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as pose_file:
+                            temporary_pose_video = Path(pose_file.name)
+                            pose_file.write(pose_reference_video.getbuffer())
+                        pose_video_path = temporary_pose_video
                     temporary_avatar_dir = Path(tempfile.mkdtemp(prefix="sadtalker_", dir=settings.outputs_dir))
                     with st.spinner("Animating face and synchronizing lips to narration. This may take several minutes on a GPU, or much longer on CPU..."):
                         animated_path = generate_talking_avatar(
@@ -280,6 +292,7 @@ if plan:
                             pose_style=pose_style,
                             preprocess="full",
                             size=256,
+                            pose_reference_video=pose_video_path,
                         )
                     shutil.copyfile(animated_path, temporary_video)
                 else:
@@ -294,7 +307,7 @@ if plan:
         except Exception as error:
             st.error(f"Could not render the video: {error}")
         finally:
-            for temporary_path in (temporary_video, temporary_audio, temporary_final, temporary_source):
+            for temporary_path in (temporary_video, temporary_audio, temporary_final, temporary_source, temporary_pose_video):
                 if temporary_path is not None:
                     temporary_path.unlink(missing_ok=True)
             if temporary_avatar_dir is not None:
