@@ -80,6 +80,7 @@ if plan:
     voice_options = {
         "English — US": "en-us",
         "English — India (Indian English)": "en-in",
+        "Malayalam (മലയാളം)": "ml",
         "English — UK": "en-gb",
         "English — Scottish": "en-sc",
         "English — UK (RP)": "en-gb-x-rp",
@@ -87,6 +88,8 @@ if plan:
     }
     selected_voice_label = st.selectbox("Generated voice", list(voice_options))
     selected_voice = voice_options[selected_voice_label]
+    if selected_voice == "ml":
+        st.info("Malayalam voice selected. The current story template is written in English, so paste Malayalam narration into the story text fields or use a Malayalam recording for Malayalam speech; this voice does not translate English text.")
     speech_speed = st.slider("Speech speed (words per minute)", min_value=100, max_value=220, value=155, step=5)
     if st.button("Generate narration audio (offline)"):
         temporary_tts = None
