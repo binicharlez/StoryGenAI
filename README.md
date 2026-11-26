@@ -11,10 +11,11 @@ StoryGenAI is an early-stage Streamlit project for turning text ideas into creat
 - **Silent vertical MP4 export** with hook, scene, and call-to-action cards (9:16, H.264)
 - SRT subtitle export aligned to the story timeline
 - Optional user-recorded narration upload (WAV, MP3, M4A, AAC, OGG, FLAC) muxed into the MP4
+- Offline text-to-speech narration using the free espeak-ng engine
 - Configuration and safe file-management utilities
 - Automated tests through GitHub Actions
 
-The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The video contains text scene cards. You can upload your own narration recording and the app will pad or trim it to the planned video duration. Automatic speech generation, voice cloning, generated footage, and face animation are not connected yet.
+The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The video contains text scene cards. You can upload your own narration recording and the app will pad or trim it to the planned video duration. The app can generate basic offline narration using espeak-ng or accept a recorded voice track. Voice cloning, generated footage, and face animation are not connected yet.
 
 ## Run in GitHub Codespaces
 
@@ -28,9 +29,9 @@ The story builder is deterministic and template-based. MP4 rendering uses Pillow
    ```
 
 5. Open the forwarded port **8501** when prompted.
-6. Enter a story idea, prepare the outline, optionally upload a narration recording, then select **Render vertical MP4** and download the result.
+6. Enter a story idea, prepare the outline, select **Generate narration audio (offline)** or optionally upload your own recording, then select **Render vertical MP4** and download the result.
 
-The Codespaces configuration installs the Python dependencies automatically.
+The Codespaces configuration installs Python dependencies and the espeak-ng system voice engine automatically.
 
 ## Run locally (optional)
 
@@ -39,6 +40,7 @@ Python 3.11 or newer:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+sudo apt-get update && sudo apt-get install -y espeak-ng
 python -m pip install -r requirements.txt
 streamlit run app.py
 ```
