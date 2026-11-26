@@ -203,6 +203,8 @@ if plan:
                             temporary_audio = Path(auto_tts.name)
                         generate_narration(plan, temporary_audio, voice=selected_voice, speed=speech_speed)
                         audio_bytes = temporary_audio.read_bytes()
+                        temporary_audio.unlink(missing_ok=True)
+                        temporary_audio = None
                         st.session_state["generated_narration_bytes"] = audio_bytes
                 with tempfile.NamedTemporaryFile(suffix=audio_suffix, dir=settings.outputs_dir, delete=False) as temp_audio:
                     temporary_audio = Path(temp_audio.name)
