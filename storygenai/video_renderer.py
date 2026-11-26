@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 
 import imageio_ffmpeg
+
+from storygenai.captions import caption_segments
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -68,7 +70,7 @@ def _make_frame(scene: dict[str, Any], scene_number: int, scene_count: int, styl
     body_font = _font(max(20, int(width * 0.043)))
     footer_font = _font(max(16, int(width * 0.03)))
 
-    draw.text((margin, int(height * 0.16)), f"{style.upper()}  •  SCENE {scene_number}/{scene_count}", font=label_font, fill=accent)
+    draw.text((margin, int(height * 0.16)), f"{style.upper()}  •  {scene.get('label', 'SCENE')} {scene_number}/{scene_count}", font=label_font, fill=accent)
     title_lines = _wrap_text(draw, str(scene.get("title", f"Scene {scene_number}")), title_font, width - 2 * margin)
     y = int(height * 0.28)
     for line in title_lines[:3]:
@@ -109,12 +111,25 @@ def render_story_video(
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     total_frames = duration * fps
-    scene_count = len(scenes)
-    # Render each distinct scene once; reuse its frame for the required duration.
+    segments = caption_segments(plan)
+    scene_count = len(segments)
     frame_bytes = [
-        _make_frame(scene, index + 1, scene_count, str(plan.get("style", "Story")), width, height).tobytes()
-        for index, scene in enumerate(scenes)
+        _make_frame(
+            {"title": segment["title"], "narration": segment["text"], "label": "CARD"},
+            index + 1,
+            scene_count,
+            str(plan.get("style", "Story")),
+            width,
+            height,
+        ).tobytes()
+        for index, segment in enumerate(segments)
     ]
+    boundaries = []
+    elapsed = 0.0
+    for segment in segments:
+        elapsed += segment["duration"]
+        boundaries.append(min(total_frames, round(elapsed * fps)))
+    boundaries[-1] = total_frames
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
     command = [
         ffmpeg, "-y", "-loglevel", "error",
@@ -129,9 +144,11 @@ def render_story_video(
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     assert process.stdin is not None
     try:
+        segment_index = 0
         for frame_index in range(total_frames):
-            scene_index = min(scene_count - 1, frame_index * scene_count // total_frames)
-            process.stdin.write(frame_bytes[scene_index])
+            while segment_index < scene_count - 1 and frame_index >= boundaries[segment_index]:
+                segment_index += 1
+            process.stdin.write(frame_bytes[segment_index])
         process.stdin.close()
         error_output = process.stderr.read() if process.stderr is not None else b""
         return_code = process.wait()
