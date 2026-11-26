@@ -18,18 +18,35 @@ FPS = 24
 
 
 def _font(size: int, bold: bool = False) -> ImageFont.ImageFont:
+    """Load a Unicode font with complex-script shaping support when available."""
+    import glob
+
+    names = (
+        ["NotoSansMalayalam-Bold.ttf", "NotoSansMalayalamUI-Bold.ttf", "NotoSans-Bold.ttf"]
+        if bold
+        else ["NotoSansMalayalam-Regular.ttf", "NotoSansMalayalamUI-Regular.ttf", "NotoSans-Regular.ttf"]
+    )
     candidates = [
         "/usr/share/fonts/truetype/noto/NotoSansMalayalam-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSansMalayalam-Regular.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansMalayalamUI-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSansMalayalamUI-Regular.ttf",
         "/System/Library/Fonts/Supplemental/Malayalam Sangam MN.ttc",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-        if bold
-        else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/Library/Fonts/Arial Bold.ttf" if bold else "/Library/Fonts/Arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ]
-    for candidate in candidates:
+    for name in names:
+        candidates.extend(glob.glob(f"/usr/share/fonts/**/*{name}", recursive=True))
+    candidates.extend(glob.glob("/usr/share/fonts/**/*Malayalam*.ttf", recursive=True))
+    candidates.extend(glob.glob("/usr/share/fonts/**/*Malayalam*.otf", recursive=True))
+
+    # Prefer RAQM, which shapes Malayalam conjuncts and vowel signs correctly.
+    layout_engine = getattr(ImageFont, "Layout", None)
+    raqm = getattr(layout_engine, "RAQM", None) if layout_engine else None
+    for candidate in dict.fromkeys(candidates):
         try:
+            if raqm is not None:
+                return ImageFont.truetype(candidate, size=size, layout_engine=raqm)
             return ImageFont.truetype(candidate, size=size)
-        except OSError:
+        except (OSError, ValueError):
             continue
     return ImageFont.load_default()
 
