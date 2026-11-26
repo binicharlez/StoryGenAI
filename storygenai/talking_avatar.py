@@ -72,8 +72,9 @@ def generate_talking_avatar(
     model_dir = get_sadtalker_dir()
     checkpoint_dir = Path(os.environ.get("SADTALKER_CHECKPOINT_DIR", model_dir / "checkpoints")).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
+    sadtalker_python = os.environ.get("SADTALKER_PYTHON", "").strip() or sys.executable
     command = [
-        sys.executable,
+        sadtalker_python,
         str(model_dir / "inference.py"),
         "--source_image", str(image_path),
         "--driven_audio", str(audio_path),
