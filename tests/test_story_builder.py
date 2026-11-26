@@ -27,3 +27,19 @@ def test_story_idea_whitespace_is_normalized():
 def test_invalid_story_inputs_raise_value_error(idea, style, duration):
     with pytest.raises(ValueError):
         build_story_plan(idea, style, duration)
+
+
+
+def test_malayalam_story_plan_uses_malayalam_template_and_voice_language():
+    plan = build_story_plan("എഐ പഠിക്കാം", "Educational", 15, language="Malayalam")
+
+    assert plan["language"] == "Malayalam"
+    assert "ഇതിനെക്കുറിച്ച്" in plan["hook"]
+    assert "എഐ പഠിക്കാം" in plan["narration"]
+    assert plan["scenes"][0]["title"] == "സാഹചര്യം പരിചയപ്പെടുത്തുക"
+    assert "ഫോളോ ചെയ്യൂ" in plan["call_to_action"]
+
+
+def test_unsupported_story_language_is_rejected():
+    with pytest.raises(ValueError, match="language"):
+        build_story_plan("A topic", "Educational", 15, language="Tamil")
