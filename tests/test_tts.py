@@ -22,7 +22,7 @@ def test_generate_narration_validates_speed(tmp_path):
         generate_narration(plan, tmp_path / "bad.wav", speed=500)
 
 
-@pytest.mark.parametrize("voice", ["en-us", "en-gb", "en-sc", "en-gb-x-rp", "en-us+f3"])
+@pytest.mark.parametrize("voice", ["en-us", "en-in", "en-gb", "en-sc", "en-gb-x-rp", "en-us+f3"])
 def test_supported_voice_choices_generate_audio(tmp_path, voice):
     plan = build_story_plan("Testing voice selection", "Educational", 15)
     output = generate_narration(plan, tmp_path / "voice.wav", voice=voice, speed=170)
