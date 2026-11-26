@@ -10,6 +10,7 @@ import hmac
 import os
 import shutil
 import tempfile
+import threading
 from pathlib import Path
 from typing import Annotated
 
@@ -26,6 +27,7 @@ from storygenai.talking_avatar import generate_talking_avatar, sadtalker_status
 
 app = FastAPI(title="StoryGenAI Private Avatar Inference", docs_url=None, redoc_url=None)
 bearer = HTTPBearer(auto_error=False)
+inference_lock = threading.Lock()
 MAX_IMAGE = 20 * 1024 * 1024
 MAX_AUDIO = 50 * 1024 * 1024
 MAX_POSE = 120 * 1024 * 1024
@@ -88,6 +90,8 @@ async def animate(
         if pose_reference_video is not None:
             pose_path = temp_root / "pose.mp4"
             await save_upload(pose_reference_video, pose_path, MAX_POSE, {".mp4"})
+        if not inference_lock.acquire(blocking=False):
+            raise HTTPException(status_code=429, detail="The GPU is busy rendering another video. Please retry in a few minutes.")
         try:
             output_path = await run_in_threadpool(
                 generate_talking_avatar,
@@ -101,6 +105,8 @@ async def animate(
             )
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"Avatar inference failed: {str(exc)[:1800]}") from exc
+        finally:
+            inference_lock.release()
         if not output_path.is_file() or output_path.stat().st_size < 1024:
             raise HTTPException(status_code=500, detail="Inference did not produce a valid MP4.")
         return FileResponse(
