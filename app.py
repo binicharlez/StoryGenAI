@@ -1,12 +1,14 @@
 import io
 import json
 import re
+import shutil
+import subprocess
 import tempfile
-import zipfile
 from pathlib import Path
 
 import streamlit as st
 from PIL import Image
+import imageio_ffmpeg
 
 from storygenai.config import get_settings
 from storygenai.file_utils import ensure_project_dirs
@@ -15,6 +17,7 @@ from storygenai.captions import generate_srt
 from storygenai.audio_mux import mux_audio
 from storygenai.tts import generate_narration
 from storygenai.video_renderer import render_story_video
+from storygenai.talking_avatar import generate_talking_avatar, sadtalker_status
 
 settings = get_settings()
 ensure_project_dirs(settings)
@@ -147,32 +150,37 @@ if plan:
     )
 
     st.markdown("### 🎥 Your presenter photos")
-    st.caption("Your reference photos are loaded from the ZIP in this private repository.")
-    bundled_zip = Path(__file__).resolve().parent / "StoryGenAI_reference_photos (1).zip"
-    bundled_images = {}
-    if bundled_zip.exists():
-        try:
-            with zipfile.ZipFile(bundled_zip) as archive:
-                for name in sorted(archive.namelist()):
-                    if name.lower().endswith((".jpg", ".jpeg", ".png")) and not name.startswith("__MACOSX/"):
-                        bundled_images[Path(name).name] = archive.read(name)
-        except (OSError, zipfile.BadZipFile) as photo_error:
-            st.warning("Could not read the reference-photo ZIP: " + str(photo_error))
-    uploaded_photos = st.file_uploader("Add or replace photo(s)", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
-    uploaded_by_name = {photo.name: photo for photo in (uploaded_photos or [])}
-    photo_choices = list(bundled_images)
-    photo_choices.extend(name for name in uploaded_by_name if name not in photo_choices)
+    st.caption("Upload the reference photo you want to animate. The photo is processed for this session and is not saved to the repository.")
+    uploaded_photos = st.file_uploader(
+        "Upload your presenter photo(s)",
+        type=["png", "jpg", "jpeg"],
+        accept_multiple_files=True,
+        key="presenter_photo_upload",
+    )
     selected_photo = None
-    if photo_choices:
-        chosen_name = st.selectbox("Select your reference photo", photo_choices)
-        if chosen_name in uploaded_by_name:
-            selected_photo = Image.open(uploaded_by_name[chosen_name]).convert("RGB")
+    if uploaded_photos:
+        photo_names = [photo.name for photo in uploaded_photos]
+        selected_photo_name = st.selectbox("Choose your reference photo", photo_names)
+        selected_photo_file = next(photo for photo in uploaded_photos if photo.name == selected_photo_name)
+        selected_photo_file.seek(0)
+        selected_photo = Image.open(selected_photo_file).convert("RGB")
+        st.image(selected_photo, caption="Selected presenter reference", use_container_width=True)
+
+    animation_mode = st.radio(
+        "Video animation",
+        ["Photo + captions", "Talking avatar (SadTalker)"],
+        help="Talking avatar uses an audio-driven face animation model installed on the machine running this app.",
+    )
+    pose_style = st.slider("Avatar head-motion style", min_value=0, max_value=45, value=0, step=1)
+    sadtalker_ready, sadtalker_message = sadtalker_status()
+    if animation_mode == "Talking avatar (SadTalker)":
+        if sadtalker_ready:
+            st.success(sadtalker_message)
+            st.caption("SadTalker animates facial movement and lip-sync from your photo and narration. It does not generate realistic hand gestures.")
         else:
-            selected_photo = Image.open(io.BytesIO(bundled_images[chosen_name])).convert("RGB")
-        st.image(selected_photo, caption="Selected presenter photo", use_container_width=True)
-    else:
-        st.info("No bundled photos found. Upload a photo to continue.")
-    st.info("This version uses a still photo with narration and captions. Face animation, hand gestures, and lip-sync are not yet implemented.")
+            st.warning("Talking-avatar model is not installed in this Streamlit runtime.")
+            st.code("Set SADTALKER_DIR to a SadTalker checkout with its checkpoints. See the README setup section.")
+            st.caption("Streamlit Community Cloud's standard CPU/memory limits are not suitable for running this large model reliably. Use a local or GPU runtime.")
     narration_file = st.file_uploader("Optional recorded narration", type=["wav", "mp3", "m4a", "aac", "ogg", "flac"])
     voice_options = {
         "English — US": "en-us",
@@ -210,46 +218,89 @@ if plan:
         st.audio(generated_audio, format="audio/wav")
         st.download_button("Download generated narration (WAV)", data=generated_audio, file_name="story_narration.wav", mime="audio/wav")
     if narration_file or generated_audio:
-        st.caption("Recorded narration takes priority. If no audio is uploaded or generated, narration is created automatically when you render the MP4. Audio is padded or trimmed to the video duration.")
-
-    if st.button("Render vertical MP4"):
+          if st.button("Render vertical MP4"):
         temporary_video = None
         temporary_audio = None
         temporary_final = None
+        temporary_source = None
+        temporary_avatar_dir = None
         try:
+            if animation_mode == "Talking avatar (SadTalker)" and selected_photo is None:
+                raise ValueError("Please upload and select a presenter photo for talking-avatar mode.")
             with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_video:
                 temporary_video = Path(temp_video.name)
-            with st.spinner("Rendering video and adding narration..."):
-                avatar_image = selected_photo
-                render_story_video(plan, temporary_video, avatar_image=avatar_image)
+            with tempfile.NamedTemporaryFile(suffix=".wav", dir=settings.outputs_dir, delete=False) as temp_audio:
+                temporary_audio = Path(temp_audio.name)
+            with st.spinner("Preparing narration and rendering your video..."):
                 if narration_file is not None:
                     audio_suffix = Path(narration_file.name).suffix.lower() or ".wav"
                     audio_bytes = narration_file.getbuffer()
+                    with tempfile.NamedTemporaryFile(suffix=audio_suffix, dir=settings.outputs_dir, delete=False) as original_audio:
+                        original_audio_path = Path(original_audio.name)
+                        original_audio.write(audio_bytes)
+                    # Convert to WAV for SadTalker when a compressed recording is uploaded.
+                    if animation_mode == "Talking avatar (SadTalker)" and audio_suffix != ".wav":
+                        conversion = subprocess.run(
+                            [
+                                imageio_ffmpeg.get_ffmpeg_exe(), "-y", "-loglevel", "error",
+                                "-i", str(original_audio_path), "-ar", "16000", "-ac", "1",
+                                str(temporary_audio),
+                            ],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                        )
+                        original_audio_path.unlink(missing_ok=True)
+                        if conversion.returncode != 0:
+                            raise RuntimeError("Could not convert the uploaded narration to WAV: " + conversion.stderr[-1000:])
+                    else:
+                        shutil.copyfile(original_audio_path, temporary_audio)
+                        original_audio_path.unlink(missing_ok=True)
                 else:
-                    audio_suffix = ".wav"
                     audio_bytes = generated_audio
                     if audio_bytes is None:
-                        # Automatically create narration when the user has not generated or uploaded audio.
-                        with tempfile.NamedTemporaryFile(suffix=".wav", dir=settings.outputs_dir, delete=False) as auto_tts:
-                            temporary_audio = Path(auto_tts.name)
                         generate_narration(plan, temporary_audio, voice=selected_voice, speed=speech_speed)
                         audio_bytes = temporary_audio.read_bytes()
-                        temporary_audio.unlink(missing_ok=True)
-                        temporary_audio = None
                         st.session_state["generated_narration_bytes"] = audio_bytes
-                with tempfile.NamedTemporaryFile(suffix=audio_suffix, dir=settings.outputs_dir, delete=False) as temp_audio:
-                    temporary_audio = Path(temp_audio.name)
-                    temp_audio.write(audio_bytes)
+                    else:
+                        temporary_audio.write_bytes(audio_bytes)
+
+                if animation_mode == "Talking avatar (SadTalker)":
+                    ready, reason = sadtalker_status()
+                    if not ready:
+                        raise RuntimeError(reason + ". Install SadTalker and checkpoints, or select Photo + captions.")
+                    with tempfile.NamedTemporaryFile(suffix=".png", dir=settings.outputs_dir, delete=False) as source_file:
+                        temporary_source = Path(source_file.name)
+                        selected_photo.save(source_file, format="PNG")
+                    temporary_avatar_dir = Path(tempfile.mkdtemp(prefix="sadtalker_", dir=settings.outputs_dir))
+                    with st.spinner("Animating face and synchronizing lips to narration. This may take several minutes on a GPU, or much longer on CPU..."):
+                        animated_path = generate_talking_avatar(
+                            temporary_source,
+                            temporary_audio,
+                            temporary_avatar_dir,
+                            pose_style=pose_style,
+                            preprocess="full",
+                            size=256,
+                        )
+                    shutil.copyfile(animated_path, temporary_video)
+                else:
+                    render_story_video(plan, temporary_video, avatar_image=selected_photo)
+
                 with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_output:
                     temporary_final = Path(temp_output.name)
                 mux_audio(temporary_video, temporary_audio, temporary_final, plan["duration_seconds"])
-                final_path = temporary_final
-                st.session_state["story_video_bytes"] = final_path.read_bytes()
+                st.session_state["story_video_bytes"] = temporary_final.read_bytes()
                 safe_title = re.sub(r"[^a-zA-Z0-9_-]+", "_", plan["title"]).strip("_")[:50] or "story"
                 st.session_state["story_video_name"] = f"{safe_title}.mp4"
         except Exception as error:
             st.error(f"Could not render the video: {error}")
         finally:
+            for temporary_path in (temporary_video, temporary_audio, temporary_final, temporary_source):
+                if temporary_path is not None:
+                    temporary_path.unlink(missing_ok=True)
+            if temporary_avatar_dir is not None:
+                shutil.rmtree(temporary_avatar_dir, ignore_errors=True)
+nally:
             for temporary_path in (temporary_video, temporary_audio, temporary_final):
                 if temporary_path is not None:
                     temporary_path.unlink(missing_ok=True)
