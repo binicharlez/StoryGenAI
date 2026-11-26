@@ -124,4 +124,4 @@ def generate_short_story(idea: str, style: str = "Cinematic", language: str = "E
         "Funny": "Her plan worked perfectly—except for one tiny detail that made the whole village laugh. Mira laughed loudest of all.",
         "Cinematic": "As the final light crossed the horizon, Mira knew the moment had changed her forever. A new adventure was already waiting.",
     }
-    return f"{openings[style]}\n\n{middle}\\n\\n{endings[style]}"
+    return f"{openings[style]}\n\n{middle}\n\n{endings[style]}"
