@@ -5,6 +5,7 @@ StoryGenAI is an early-stage Streamlit project for turning text ideas into creat
 ## Current prototype
 
 - Story idea input with Educational, Motivational, Funny, and Cinematic styles
+- English or Malayalam script templates (Malayalam input topic is retained as entered)
 - Offline template-based narration draft and scene outline
 - Visual prompts for each scene
 - JSON export of the story plan
@@ -15,7 +16,7 @@ StoryGenAI is an early-stage Streamlit project for turning text ideas into creat
 - Configuration and safe file-management utilities
 - Automated tests through GitHub Actions
 
-The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The video contains text scene cards. You can upload your own narration recording and the app will pad or trim it to the planned video duration. The app can generate basic offline narration using espeak-ng, select from several English voice variants including Indian English and Malayalam, adjust speech speed, or accept a recorded voice track. The story template currently generates English text; the Malayalam voice does not translate it. Voice cloning, generated footage, and face animation are not connected yet.
+The story builder is deterministic and template-based. MP4 rendering uses Pillow and the bundled FFmpeg binary from imageio-ffmpeg. No paid API or AI model is required. The video contains text scene cards. You can upload your own narration recording and the app will pad or trim it to the planned video duration. The app can generate basic offline narration using espeak-ng, select from several English voice variants including Indian English and Malayalam, adjust speech speed, or accept a recorded voice track. English is the default script language. Malayalam mode provides Malayalam hooks, scene titles, scene narration guidance, and a Malayalam call-to-action; enter your topic in Malayalam for Malayalam narration text. The Malayalam voice does not translate English input. Voice cloning, generated footage, and face animation are not connected yet.
 
 ## Run in GitHub Codespaces
 
@@ -31,7 +32,7 @@ The story builder is deterministic and template-based. MP4 rendering uses Pillow
 5. Open the forwarded port **8501** when prompted.
 6. Enter a story idea, prepare the outline, select **Generate narration audio (offline)** or optionally upload your own recording, then select **Render vertical MP4** and download the result.
 
-The Codespaces configuration installs Python dependencies and the espeak-ng system voice engine automatically.
+The Codespaces configuration installs Python dependencies, espeak-ng, and Noto fonts for Malayalam text automatically.
 
 ## Run locally (optional)
 
@@ -40,7 +41,7 @@ Python 3.11 or newer:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-sudo apt-get update && sudo apt-get install -y espeak-ng
+sudo apt-get update && sudo apt-get install -y espeak-ng fonts-noto-core
 python -m pip install -r requirements.txt
 streamlit run app.py
 ```
