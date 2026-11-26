@@ -32,10 +32,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt -r avatar-service-requirements.txt
 
       - name: Compile Python files
-        run: python -m compileall -q app.py storygenai tests
+        run: python -m compileall -q app.py avatar_service.py storygenai tests
 
       - name: Run tests
         run: pytest -q
