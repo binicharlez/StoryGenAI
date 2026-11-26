@@ -15,6 +15,7 @@ def test_sadtalker_status_reports_missing_checkout(monkeypatch, tmp_path):
 def test_generate_talking_avatar_invokes_configured_sadtalker(monkeypatch, tmp_path):
     model_dir = tmp_path / "SadTalker"
     (model_dir / "checkpoints").mkdir(parents=True)
+    (model_dir / "checkpoints" / "test.ckpt").write_text("stub", encoding="utf-8")
     (model_dir / "inference.py").write_text("# test stub", encoding="utf-8")
     monkeypatch.setenv("SADTALKER_DIR", str(model_dir))
     monkeypatch.delenv("SADTALKER_CHECKPOINT_DIR", raising=False)
@@ -26,7 +27,10 @@ def test_generate_talking_avatar_invokes_configured_sadtalker(monkeypatch, tmp_p
     audio_path.write_bytes(b"audio")
     result_dir = tmp_path / "result"
 
+    captured = {}
+
     def fake_run(command, **kwargs):
+        captured["command"] = command
         output_dir = Path(command[command.index("--result_dir") + 1])
         generated = output_dir / "fake-avatar.mp4"
         generated.write_bytes(b"fake mp4")
@@ -47,4 +51,6 @@ def test_generate_talking_avatar_invokes_configured_sadtalker(monkeypatch, tmp_p
     )
 
     assert output.name == "fake-avatar.mp4"
-    assert "--source_image" in str(output)
+    assert "--source_image" in captured["command"]
+    assert "--driven_audio" in captured["command"]
+    assert "--still" in captured["command"]
