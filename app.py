@@ -9,6 +9,7 @@ from storygenai.config import get_settings
 from storygenai.file_utils import ensure_project_dirs
 from storygenai.story_builder import build_story_plan
 from storygenai.captions import generate_srt
+from storygenai.audio_mux import mux_audio
 from storygenai.video_renderer import render_story_video
 
 settings = get_settings()
@@ -23,8 +24,8 @@ st.write(
 )
 
 st.info(
-    "The MP4 is a silent scene-card video with text. Voice generation, face animation, "
-    "and AI-generated footage are not connected yet."
+    "The video uses text scene cards. You can upload your own narration recording "
+    "to add voice audio; automatic voice generation and face animation are not connected yet."
 )
 
 with st.form("story_form"):
@@ -73,24 +74,38 @@ if plan:
         mime="application/x-subrip",
     )
 
+    narration_file = st.file_uploader("Optional narration audio", type=["wav", "mp3", "m4a", "aac", "ogg", "flac"])
+    if narration_file:
+        st.caption("Your narration will be padded or trimmed to match the video duration.")
+
     if st.button("Render vertical MP4"):
-        temporary_path = None
+        temporary_video = None
+        temporary_audio = None
+        temporary_final = None
         try:
-            with tempfile.NamedTemporaryFile(
-                suffix=".mp4", dir=settings.outputs_dir, delete=False
-            ) as temporary_file:
-                temporary_path = Path(temporary_file.name)
-            with st.spinner("Rendering your silent vertical video..."):
-                render_story_video(plan, temporary_path)
-                st.session_state["story_video_bytes"] = temporary_path.read_bytes()
+            with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_video:
+                temporary_video = Path(temp_video.name)
+            with st.spinner("Rendering your vertical video..."):
+                render_story_video(plan, temporary_video)
+                final_path = temporary_video
+                if narration_file is not None:
+                    audio_suffix = Path(narration_file.name).suffix.lower() or ".wav"
+                    with tempfile.NamedTemporaryFile(suffix=audio_suffix, dir=settings.outputs_dir, delete=False) as temp_audio:
+                        temporary_audio = Path(temp_audio.name)
+                        temp_audio.write(narration_file.getbuffer())
+                    with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_output:
+                        temporary_final = Path(temp_output.name)
+                    mux_audio(temporary_video, temporary_audio, temporary_final, plan["duration_seconds"])
+                    final_path = temporary_final
+                st.session_state["story_video_bytes"] = final_path.read_bytes()
                 safe_title = re.sub(r"[^a-zA-Z0-9_-]+", "_", plan["title"]).strip("_")[:50] or "story"
                 st.session_state["story_video_name"] = f"{safe_title}.mp4"
         except Exception as error:
             st.error(f"Could not render the video: {error}")
         finally:
-            if temporary_path is not None:
-                temporary_path.unlink(missing_ok=True)
-
+            for temporary_path in (temporary_video, temporary_audio, temporary_final):
+                if temporary_path is not None:
+                    temporary_path.unlink(missing_ok=True)
     video_bytes = st.session_state.get("story_video_bytes")
     if video_bytes:
         st.success("Your MP4 is ready.")
