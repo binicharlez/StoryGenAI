@@ -217,4 +217,4 @@ if plan:
         )
 
 st.markdown("---")
-st.markdown("<div style=\"text-align:center; color:gray; font-weight:600;\">⭐ Made by Bini Mol N C ⭐</div>", unsafe_allow_html=True)
+st.markdown("<div style=\"text-align:center; color:gray; font-weight:600;\">⭐ Made by Bini Mol N. C. ⭐</div>", unsafe_allow_html=True)
