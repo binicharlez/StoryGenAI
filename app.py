@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 import streamlit as st
+from PIL import Image
 
 from storygenai.config import get_settings
 from storygenai.file_utils import ensure_project_dirs
@@ -143,6 +144,29 @@ if plan:
         mime="application/x-subrip",
     )
 
+    st.markdown("### 🎥 Photo-based presenter")
+    st.write("Upload your own reference photo(s). They are processed for this session and are not added to the public GitHub repository.")
+    presenter_photos = st.file_uploader(
+        "Upload presenter photo(s)",
+        type=["png", "jpg", "jpeg"],
+        accept_multiple_files=True,
+        key="presenter_photo_upload",
+    )
+    selected_photo = None
+    if presenter_photos:
+        photo_names = [photo.name for photo in presenter_photos]
+        selected_photo_name = st.selectbox("Choose the photo for this video", photo_names)
+        selected_photo = next(photo for photo in presenter_photos if photo.name == selected_photo_name)
+        try:
+            selected_photo.seek(0)
+            preview_image = Image.open(selected_photo).convert("RGB")
+            st.image(preview_image, caption="Selected presenter reference", use_container_width=True)
+            selected_photo.seek(0)
+        except Exception as photo_error:
+            st.error(f"Could not read this photo: {photo_error}")
+            selected_photo = None
+    st.info("This photo mode places your photo in the portrait video with narration and captions. Natural hand gestures, facial animation, and lip-sync require a separate talking-avatar model and are not yet available in this app version.")
+
     narration_file = st.file_uploader("Optional recorded narration", type=["wav", "mp3", "m4a", "aac", "ogg", "flac"])
     voice_options = {
         "English — US": "en-us",
@@ -190,7 +214,11 @@ if plan:
             with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_video:
                 temporary_video = Path(temp_video.name)
             with st.spinner("Rendering video and adding narration..."):
-                render_story_video(plan, temporary_video)
+                avatar_image = None
+                if selected_photo is not None:
+                    selected_photo.seek(0)
+                    avatar_image = Image.open(selected_photo).convert("RGB")
+                render_story_video(plan, temporary_video, avatar_image=avatar_image)
                 if narration_file is not None:
                     audio_suffix = Path(narration_file.name).suffix.lower() or ".wav"
                     audio_bytes = narration_file.getbuffer()
