@@ -19,6 +19,8 @@ FPS = 24
 
 def _font(size: int, bold: bool = False) -> ImageFont.ImageFont:
     candidates = [
+        "/usr/share/fonts/truetype/noto/NotoSansMalayalam-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSansMalayalam-Regular.ttf",
+        "/System/Library/Fonts/Supplemental/Malayalam Sangam MN.ttc",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
         if bold
         else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
