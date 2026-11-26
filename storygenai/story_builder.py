@@ -45,7 +45,7 @@ _CTA = {
 
 def build_story_plan(idea: str, style: str, duration_seconds: int, language: str = "English") -> dict:
     """Build a local template-based narration and scene plan."""
-    cleaned_idea = re.sub(r"\\s+", " ", idea).strip()
+    cleaned_idea = re.sub(r"\s+", " ", idea).strip()
     if not cleaned_idea:
         raise ValueError("Please provide a story idea.")
     if language not in _STYLE_HOOKS:
@@ -70,7 +70,7 @@ def build_story_plan(idea: str, style: str, duration_seconds: int, language: str
                 "narration": f"{direction} വിഷയം: {cleaned_idea}" if language == "Malayalam" else f"{direction} Topic: {cleaned_idea}",
                 "visual_prompt": (
                     f"Vertical 9:16 video, {style.lower()} style; "
-                    f"visualize: {direction.lower()} Topic: {cleaned_idea"
+                    f"visualize: {direction.lower()} Topic: {cleaned_idea}"
                 ),
             }
         )
