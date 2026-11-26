@@ -180,7 +180,7 @@ if plan:
         st.audio(generated_audio, format="audio/wav")
         st.download_button("Download generated narration (WAV)", data=generated_audio, file_name="story_narration.wav", mime="audio/wav")
     if narration_file or generated_audio:
-        st.caption("Recorded narration takes priority if both a recording and generated narration are available. Audio is padded or trimmed to the video duration.")
+        st.caption("Recorded narration takes priority. If no audio is uploaded or generated, narration is created automatically when you render the MP4. Audio is padded or trimmed to the video duration.")
 
     if st.button("Render vertical MP4"):
         temporary_video = None
@@ -189,23 +189,28 @@ if plan:
         try:
             with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_video:
                 temporary_video = Path(temp_video.name)
-            with st.spinner("Rendering your vertical video..."):
+            with st.spinner("Rendering video and adding narration..."):
                 render_story_video(plan, temporary_video)
-                final_path = temporary_video
-                if narration_file is not None or generated_audio is not None:
-                    if narration_file is not None:
-                        audio_suffix = Path(narration_file.name).suffix.lower() or ".wav"
-                        audio_bytes = narration_file.getbuffer()
-                    else:
-                        audio_suffix = ".wav"
-                        audio_bytes = generated_audio
-                    with tempfile.NamedTemporaryFile(suffix=audio_suffix, dir=settings.outputs_dir, delete=False) as temp_audio:
-                        temporary_audio = Path(temp_audio.name)
-                        temp_audio.write(audio_bytes)
-                    with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_output:
-                        temporary_final = Path(temp_output.name)
-                    mux_audio(temporary_video, temporary_audio, temporary_final, plan["duration_seconds"])
-                    final_path = temporary_final
+                if narration_file is not None:
+                    audio_suffix = Path(narration_file.name).suffix.lower() or ".wav"
+                    audio_bytes = narration_file.getbuffer()
+                else:
+                    audio_suffix = ".wav"
+                    audio_bytes = generated_audio
+                    if audio_bytes is None:
+                        # Automatically create narration when the user has not generated or uploaded audio.
+                        with tempfile.NamedTemporaryFile(suffix=".wav", dir=settings.outputs_dir, delete=False) as auto_tts:
+                            temporary_audio = Path(auto_tts.name)
+                        generate_narration(plan, temporary_audio, voice=selected_voice, speed=speech_speed)
+                        audio_bytes = temporary_audio.read_bytes()
+                        st.session_state["generated_narration_bytes"] = audio_bytes
+                with tempfile.NamedTemporaryFile(suffix=audio_suffix, dir=settings.outputs_dir, delete=False) as temp_audio:
+                    temporary_audio = Path(temp_audio.name)
+                    temp_audio.write(audio_bytes)
+                with tempfile.NamedTemporaryFile(suffix=".mp4", dir=settings.outputs_dir, delete=False) as temp_output:
+                    temporary_final = Path(temp_output.name)
+                mux_audio(temporary_video, temporary_audio, temporary_final, plan["duration_seconds"])
+                final_path = temporary_final
                 st.session_state["story_video_bytes"] = final_path.read_bytes()
                 safe_title = re.sub(r"[^a-zA-Z0-9_-]+", "_", plan["title"]).strip("_")[:50] or "story"
                 st.session_state["story_video_name"] = f"{safe_title}.mp4"
