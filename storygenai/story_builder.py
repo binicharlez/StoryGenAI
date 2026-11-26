@@ -90,7 +90,7 @@ def build_story_plan(idea: str, style: str, duration_seconds: int, language: str
 
 def generate_short_story(idea: str, style: str = "Cinematic", language: str = "English") -> str:
     """Generate a complete short story locally from a simple story template."""
-    cleaned_idea = re.sub(r"\\s+", " ", idea).strip()
+    cleaned_idea = re.sub(r"\s+", " ", idea).strip()
     if not cleaned_idea:
         raise ValueError("Please provide a story idea.")
     if style not in {"Educational", "Motivational", "Funny", "Cinematic"}:
@@ -124,4 +124,4 @@ def generate_short_story(idea: str, style: str = "Cinematic", language: str = "E
         "Funny": "Her plan worked perfectly—except for one tiny detail that made the whole village laugh. Mira laughed loudest of all.",
         "Cinematic": "As the final light crossed the horizon, Mira knew the moment had changed her forever. A new adventure was already waiting.",
     }
-    return f"{openings[style]}\\n\\n{middle}\\n\\n{endings[style]}"
+    return f"{openings[style]}\n\n{middle}\\n\\n{endings[style]}"
