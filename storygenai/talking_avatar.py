@@ -41,6 +41,7 @@ def generate_talking_avatar(
     pose_style: int = 0,
     preprocess: str = "full",
     size: int = 256,
+    pose_reference_video: str | Path | None = None,
 ) -> Path:
     """Run SadTalker and return its generated MP4 path."""
     ready, message = sadtalker_status()
@@ -58,6 +59,9 @@ def generate_talking_avatar(
         raise FileNotFoundError(f"Presenter photo not found: {image_path}")
     if not audio_path.is_file():
         raise FileNotFoundError(f"Narration audio not found: {audio_path}")
+    pose_video_path = Path(pose_reference_video).expanduser().resolve() if pose_reference_video else None
+    if pose_video_path is not None and not pose_video_path.is_file():
+        raise FileNotFoundError(f"Pose reference video not found: {pose_video_path}")
     if not 0 <= pose_style <= 45:
         raise ValueError("Pose style must be between 0 and 45.")
     if preprocess not in {"crop", "extcrop", "resize", "full", "extfull"}:
@@ -81,6 +85,8 @@ def generate_talking_avatar(
         "--still",
         "--verbose",
     ]
+    if pose_video_path is not None:
+        command.extend(["--ref_pose", str(pose_video_path)])
     if os.environ.get("SADTALKER_FORCE_CPU", "").strip().lower() in {"1", "true", "yes"}:
         command.append("--cpu")
 
